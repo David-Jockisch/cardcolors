@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Colorful Circles</title>
+  <style>
+    body {
+      background-color: #30336b;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    #static-border {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #34495e;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+    }
+    .circle-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .circle {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      margin: 10px;
+      cursor: pointer;
+      border: 5px solid #7a8080;
+      box-shadow: 1px 0 10px rgb(53, 53, 53);
+    }
+
+    .circle-text {
+      margin-top: 5px;
+      text-align: center;
+      color: #a2b3b4;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 2em;
+      text-shadow: 2px 2px 2px rgb(53, 53, 53);
+    }
+  </style>
+</head>
+<body>
+  <div id="static-border">
+    <div class="circle-container">
+      <div class="circle" id="circle1"></div>
+      <div class="circle-text">Dallas School</div>
+    </div>
+
+    <div class="circle-container">
+      <div class="circle" id="circle2"></div>
+      <div class="circle-text">Dallas Home</div>
+    </div>
+
+    <div class="circle-container">
+      <div class="circle" id="circle3"></div>
+      <div class="circle-text">Haylee Home</div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const firebaseConfig = {
+  apiKey: "AIzaSyDHVK8fPxmdqcUuKZdmntn0K5vRVHdM60M",
+  authDomain: "cardcolors-d32b6.firebaseapp.com",
+  databaseURL: "https://cardcolors-d32b6-default-rtdb.firebaseio.com",
+  projectId: "cardcolors-d32b6",
+  storageBucket: "cardcolors-d32b6.appspot.com",
+  messagingSenderId: "1005065261621",
+  appId: "1:1005065261621:web:296784d67a18a74460177c",
+  measurementId: "G-Y6J469DKBV"
+};
+
+      firebase.initializeApp(firebaseConfig);
+
+      // Reference to the Firebase database
+      const database = firebase.database();
+
+      var colors = ['white', 'green', 'yellow', 'red'];
+      var colorIndices = { 'circle1': 0, 'circle2': 0, 'circle3': 0 };
+
+      // Initialize colors from the database
+      function initializeColors() {
+        Object.keys(colorIndices).forEach(circleId => {
+          const circleRef = database.ref(circleId);
+          circleRef.once('value', snapshot => {
+            const colorIndex = snapshot.val() || 0;
+            colorIndices[circleId] = colorIndex;
+            const circle = document.getElementById(circleId);
+            if (circle) {
+              circle.style.backgroundColor = colors[colorIndex];
+            } else {
+              console.error(`Circle element with id ${circleId} not found.`);
+            }
+          });
+        });
+      }
+
+      function changeColor(circleId) {
+  var circle = document.getElementById(circleId);
+
+  // Check if the circle element exists
+  if (circle) {
+    // Set the color for the current circle
+    circle.style.backgroundColor = colors[colorIndices[circleId]];
+
+    // Increment the color index for the current circle and reset if it exceeds the array length
+    colorIndices[circleId] = (colorIndices[circleId] + 1) % colors.length;
+
+    // Update the color in the database
+    const circleRef = database.ref(circleId);
+    circleRef.set(colorIndices[circleId]).then(() => {
+      // This callback will be executed after the write to the database is complete
+      console.log('Color updated in the database.');
+      // Optionally, you can also update the local display here
+      circle.style.backgroundColor = colors[colorIndices[circleId]];
+    });
+  } else {
+    console.error(`Circle element with id ${circleId} not found.`);
+  }
+}
+
+
+      // Call initializeColors to load initial colors from the database
+      initializeColors();
+
+      // Add event listeners to circles
+      Object.keys(colorIndices).forEach(circleId => {
+        const circle = document.getElementById(circleId);
+        if (circle) {
+          circle.addEventListener('click', function () {
+            changeColor(circleId);
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
